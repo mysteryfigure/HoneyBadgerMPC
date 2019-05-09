@@ -287,9 +287,11 @@ class HbAvssBatch():
         assert len(crs[0]) == t+1
         self.g = crs[0][0]
 
+        print('A')
+
         # Create a mechanism to split the `recv` channels based on `tag`
         self.subscribe_recv_task, self.subscribe_recv = subscribe_recv(recv)
-
+        print('B')
         # Create a mechanism to split the `send` channels based on `tag`
         def _send(tag):
             return wrap_send(tag, send)
@@ -507,7 +509,10 @@ class HbAvssBatch():
                                                (phi[k](i+1), aux_poly[k](i+1), witness))
             dispersal_msg_list[i] = dumps(z)
 
-        return dumps((commitments, ephemeral_public_key)), dispersal_msg_list
+        dm = dumps((commitments, ephemeral_public_key))
+        
+        print('Size of messages:', len(dm) + sum(map(len, dispersal_msg_list)))
+        return dm, dispersal_msg_list
 
     async def avss(self, avss_id, values=None, dealer_id=None, client_mode=False):
         """
