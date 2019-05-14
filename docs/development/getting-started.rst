@@ -7,7 +7,7 @@ To start developing and contributing to HoneyBadgerMPC:
 
    .. code-block:: shell-session
 
-       $ git clone --branch dev git@github.com:<username>/HoneyBadgerMPC.git
+       $ git clone --recursive --branch dev git@github.com:<username>/HoneyBadgerMPC.git
 
 3. `Add the remote`_ repository `initc3/HoneyBadgerMPC`_:
 
