@@ -24,20 +24,20 @@ The HoneyBadgerMPC protocol is based on known MPC techniques, carefully selected
 1. Collecting client inputs. 
   Clients submit input to the servers through an input masking technique [COPS15]. The servers start with a secret sharing of a random mask `[r]`. A client retrieves shares of this mask from the servers and reconstructs `r`, and then publishes their masked message `(m+r)`. The servers obtain their share of the input as `[m] := (m+r)-[r]`.
   
-Our programming model is mainly inspired by Viff. In fact our codebase began as a rewrite of Viff, porting it to `Python3/asyncio` rather than `Python2/Twisted`.
+Our programming model is mainly inspired by Viff. In fact, our codebase began as a rewrite of Viff, porting it to `Python3/asyncio` rather than `Python2/Twisted`.
 The programming model is based on Python mixins, which extend a `Share` that represents a pipelined MPC computation.
 
-To reach agreement on the published inputs, we make use of either the built-in asynchronous broadcast protocol (a port of HoneyBadgerBFT), or else an external blockchain service (See Fabric Integration and Ethereum Integration).
+To reach an agreement on the published inputs, we make use of either the built-in asynchronous broadcast protocol (a port of HoneyBadgerBFT), or else an external blockchain service (See Fabric Integration and Ethereum Integration).
 
 2. Online phase.
    Once clients provide input, the protocol computes an MPC program layer by layer. 
-   An MPC program consist of linear operations on secret shared data, as well as batch reconstruction. Linear operations can be computed locally, non-linear operations like multiplication must be emulated using share reconstruction and preprocessed values.
+   An MPC program consists of linear operations on secret shared data, as well as batch reconstruction. Linear operations can be computed locally, non-linear operations like multiplication must be emulated using share reconstruction and preprocessed values.
    See `mpc.py`, `batch_reconstruction.py`, `taskprogramrunner.py`, `reed_solomon.py`
    Our share reconstruction implementation is aggressively batched, and uses C++ and the NTL library for performance.
    
 The bottleneck operation in MPC is generally batch reconstruction of secret-shared values.
 Here the batch operations are implemented in C++ using the NTL library, and wrapped using Cython.
-We implement both FFT-based (quasilinear) and matrix based (superlinear). (TODO: link to benchmarks about FFT vs matrix mul)
+We implement both FFT-based (quasilinear) and matrix-based (superlinear). (TODO: link to benchmarks about FFT vs matrix mul)
 
 3. Offline phase (generating preprocessing ingredients).
 Since the online phase consumes preprocessed random values, we need to generate these values ahead of time. 
@@ -47,14 +47,14 @@ We use a linear overhead method `RanDouSha` [BH08]. See `offline_randousha.py`
 For more detail on the HoneyBadgerMPC components, see [docs/subprotocols.rst](docs/subprotocols.rst).
 
 ### Comparison with other MPC implementations
-Compared to oher MPC toolkit implementations (http://www.multipartycomputation.com/mpc-software,https://github.com/rdragos/awesome-mpc#software), HoneyBadgerMPC is unique in that it focuses on robustness.
+Compared to other MPC toolkit implementations (http://www.multipartycomputation.com/mpc-software,https://github.com/rdragos/awesome-mpc#software), HoneyBadgerMPC is unique in that it focuses on robustness.
 In a network of `n` server nodes, assuming at most `t<n/3` are compromised, then HonyeBadgerMPC provides confidentiality, integrity, and availability guarantees. In MPC terminology, it is asynchronous, provides active security, has linear communication overhead, and guarantees output delivery.
 Other MPC toolkits, such as SCALE-MAMBA, Viff, EMP, SPDZ, and others, do not provide guaranteed output delivery, and so if even a single node crashes they stop providing output at all.
 
 Linear communication overhead is about scaling to large network sizes. HoneyBadgerMPC implements aggressive batching and amortization, so as more server nodes are added, the communication cost per server approaches a constant). 
 
-### Comparison with zero knowledge proofs
-So far, one of the main ways to provide privacy for blockchains is to use commitments and zero knowledge proofs. As an alternative, the main advantage of MPC is that it can provide better availability guarantees. With commitments, there is usually a sngle party (the prover) who knows the witness. This becomes a problem when writing general smart contract applications, like auctions or mixers. If the prover aborts the protocol, then the committed data is inaccessible. In MPC, the secret data is stored as secret shares on the server nodes, so if any 1/3 of the server nodes fail, the data is still available.
+### Comparison with zero-knowledge proofs
+So far, one of the main ways to provide privacy for blockchains is to use commitments and zero-knowledge proofs. As an alternative, the main advantage of MPC is that it can provide better availability guarantees. With commitments, there is usually a single party (the prover) who knows the witness. This becomes a problem when writing general smart contract applications, like auctions or mixers. If the prover aborts the protocol, then the committed data is inaccessible. In MPC, the secret data is stored as secret shares on the server nodes, so if any 1/3 of the server nodes fail, the data is still available.
 
 ## HoneyBadgerMPC Applications
 
@@ -69,12 +69,12 @@ HoneyBadgerMPC is designed to be a useful starting point for other research prot
 We parameterize HoneyBadgerMPC with a finite field based on the BLS12-381 pairing-friendly elliptic curve (the same one used in Zcash Sapling).
 The codebase comes with a python wrapper for the rust-based implementation of BLS12-381 
  (see `betterpairing.py`).
-This is used to provide constant size polynomial commitments (see the `hbavss.py`).
+This is used to provide constant-size polynomial commitments (see the `hbavss.py`).
 
 HoneyBadgerMPC also includes an MPC implementation of `MiMC` symmetric cryptography (`honeybadgermpc/progs/mimc.py`), and the `JubJub` elliptic curve for public key cryptography (`honeybadgermpc/progs/jubjub.py`).
 
 ### Blockchain Integration
-HoneyBadgerMPC is designed to be linked up with external (transparent) blockchain so it can provide a privacy-preserving extension. 
+HoneyBadgerMPC is designed to be linked up with an external (transparent) blockchain so it can provide a privacy-preserving extension. 
 The following integration ideas have been explored so far:
 - a built-in asynchronous BFT protocol (HoneyBadgerBFT) 
 - The AsynchroMix applications `apps/asynchromix/asynchromix.py` contains an example `web3` (Ethereum) ropsten integration. Run it with `python apps/asynchromix/asynchromix.py`. 
